@@ -1,12 +1,5 @@
 """
-Custom ADK Patches for MCP Timeout Configuration.
-
-This module provides custom implementations of ADK's MCP classes to allow
-configurable timeouts for StdioServerParameters connections.
-
-The google-adk 1.2.0 introduced a hardcoded 5-second timeout for stdio-based
-MCP connections, which can be too short for some legitimate operations like
-Spinach AI transcription and analysis.
+ref: https://github.com/google/adk-python/issues/1086
 """
 
 import sys
@@ -14,15 +7,23 @@ from contextlib import AsyncExitStack
 from datetime import timedelta
 from typing import Any, Dict, List, Optional, TextIO, Union
 
-from google.adk.tools.mcp_tool.mcp_session_manager import MCPSessionManager, StdioServerParameters
-from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset, SseServerParams, StreamableHTTPServerParams, ToolPredicate
+from google.adk.tools.mcp_tool.mcp_session_manager import (
+    MCPSessionManager,
+    StdioServerParameters,
+)
+from google.adk.tools.mcp_tool.mcp_toolset import (
+    MCPToolset,
+    SseServerParams,
+    StreamableHTTPServerParams,
+    ToolPredicate,
+)
 from mcp.client.session import ClientSession
 from mcp.client.sse import sse_client
 from mcp.client.stdio import stdio_client
 from mcp.client.streamable_http import streamablehttp_client
 
 # Configure your desired timeout for stdio-based MCP connections
-CUSTOM_STDIO_TIMEOUT_SECONDS = 60  # 60 seconds instead of the default 5 seconds
+CUSTOM_STDIO_TIMEOUT_SECONDS = 600  # 60 seconds instead of the default 5 seconds
 
 
 class CustomMcpSessionManager(MCPSessionManager):
@@ -36,7 +37,9 @@ class CustomMcpSessionManager(MCPSessionManager):
 
     def __init__(
         self,
-        connection_params: Union[StdioServerParameters, SseServerParams, StreamableHTTPServerParams],
+        connection_params: Union[
+            StdioServerParameters, SseServerParams, StreamableHTTPServerParams
+        ],
         errlog: TextIO = sys.stderr,
     ):
         """Initialize the custom session manager with all required attributes."""
@@ -83,9 +86,9 @@ class CustomMcpSessionManager(MCPSessionManager):
                 )
             else:
                 raise ValueError(
-                    'Unable to initialize connection. Connection should be'
-                    ' StdioServerParameters or SseServerParams, but got'
-                    f' {self._connection_params}'
+                    "Unable to initialize connection. Connection should be"
+                    " StdioServerParameters or SseServerParams, but got"
+                    f" {self._connection_params}"
                 )
 
             transports = await self._exit_stack.enter_async_context(client)
@@ -124,7 +127,7 @@ class CustomMcpSessionManager(MCPSessionManager):
             except Exception as e:
                 # Log the error but don't re-raise to avoid blocking shutdown
                 print(
-                    f'Warning: Error during MCP session cleanup: {e}', file=self._errlog
+                    f"Warning: Error during MCP session cleanup: {e}", file=self._errlog
                 )
             finally:
                 self._exit_stack = None
@@ -167,7 +170,7 @@ class CustomMCPToolset(MCPToolset):
         self._closed = False
         self._session: Optional[ClientSession] = None  # Normal attribute, not property
 
-    @property  
+    @property
     def _session(self):
         """Getter for _session - returns the session from the session manager."""
         return getattr(self._mcp_session_manager, "_session", None)

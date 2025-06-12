@@ -1,8 +1,7 @@
 from google.adk.agents import Agent
 from google.adk.tools.mcp_tool.mcp_session_manager import StdioServerParameters
 import logging
-# Import the custom patch
-from utils.customer_session_manager import CustomMCPToolset as MCPToolsetimport
+from utils.customer_session_manager import CustomMCPToolset as MCPToolset
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -11,7 +10,7 @@ logger = logging.getLogger(__name__)
     
 
 def get_airbnb_tools():
-    toolset = MCPToolsetimport(
+    toolset = MCPToolset(
         connection_params=StdioServerParameters(
             command="npx",
             args=["-y", "@openbnb/mcp-server-airbnb", "--ignore-robots-txt"],
