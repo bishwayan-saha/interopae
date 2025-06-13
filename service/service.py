@@ -130,7 +130,7 @@ async def send_message_non_streaming(user_id: str, request: UserRequest):
         session = await runner.session_service.create_session(
             app_name=APP_NAME, user_id=user_id, session_id=session_id, state={}
         )
-    content = Content(role="user", parts=[Part.from_text(text=request.message)])
+    content = Content(role="user", parts=[Part.from_text(text=request.query)])
     events = list(
         runner.run(user_id=user_id, session_id=session.id, new_message=content)
     )

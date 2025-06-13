@@ -1,16 +1,21 @@
+import json
+import logging
+import os
+from typing import List
+
+from dotenv import load_dotenv
 from google.adk.agents import Agent
 from google.adk.tools.mcp_tool.mcp_session_manager import StdioServerParameters
-import logging
+
 from utils.customer_session_manager import CustomMCPToolset as MCPToolset
-from dotenv import load_dotenv
-import os
-import json
-from typing import List
+
 load_dotenv()
 
 logger = logging.getLogger(__name__)
-    
-mcp_config_dir = "/home/bishwayansaha99/poc/interopae/tools"
+
+mcp_config_dir = os.path.abspath(os.path.join(os.path.abspath(__file__), "../../..", "tools"))
+
+
 def load_travel_agent_tools():
     with open(f"{mcp_config_dir}/{os.path.basename(os.path.dirname(__file__))}.json") as file:
         data = json.load(file)
@@ -27,6 +32,7 @@ def load_travel_agent_tools():
         tools.append(toolset)
     return tools
 
+
 # def get_airbnb_tools():
 #     toolset = MCPToolset(
 #         connection_params=StdioServerParameters(
@@ -41,11 +47,10 @@ def create_travel_agent():
     toolset = load_travel_agent_tools()
 
     return Agent(
-        name = "travel_agent",
-        model = "gemini-2.0-flash-exp",
+        name="travel_agent",
+        model="gemini-2.0-flash-exp",
         description="The travel agent has access to different tools like airbnb hotel search",
-        instruction=
-        """
+        instruction="""
         You are a specialized AI agent designed to assist users with Airbnb-related tasks by leveraging the Airbnb MCP tool. Your primary function is to provide accurate, efficient, and user-friendly support in booking accommodations, managing listings, and retrieving relevant property information.
 
         ## Capabilities
@@ -68,7 +73,8 @@ def create_travel_agent():
         - Ensure responses align with Airbnb’s guidelines and policies.
         - Prevent unnecessary delays in retrieving and processing information.
         """,
-        tools=toolset
+        tools=toolset,
     )
+
 
 root_agent = create_travel_agent()
