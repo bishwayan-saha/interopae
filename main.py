@@ -20,17 +20,17 @@ from service import service
 logger = logging.getLogger(__name__)
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    server_domain = os.getenv("SERVER_DOMAIN") or "http://localhost"
-    credentials = requests.get(f"{server_domain}:3100/credentials").json()
-    for creds in credentials["data"]:
-        os.environ[creds] = credentials["data"].get(creds)
-    load_dotenv()
-    yield
+# @asynccontextmanager
+# async def lifespan(app: FastAPI):
+#     server_domain = os.getenv("SERVER_DOMAIN") or "http://localhost"
+#     credentials = requests.get(f"{server_domain}:3100/credentials").json()
+#     for creds in credentials["data"]:
+#         os.environ[creds] = credentials["data"].get(creds)
+#     load_dotenv()
+#     yield
 
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI()
 active_sessions: Dict[str, LiveRequestQueue] = {}
 
 app.add_middleware(
