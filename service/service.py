@@ -135,5 +135,5 @@ async def send_message_non_streaming(user_id: str, request: UserRequest):
         runner.run(user_id=user_id, session_id=session.id, new_message=content)
     )
     if not events or not events[-1].content or not events[-1].content.parts:
-        return ""
-    return "\n".join(p.text for p in events[-1].content.parts if p.text)
+        return {"response": "No response from agent", "type": "text"}
+    return {"response": "\n".join(p.text for p in events[-1].content.parts if p.text), "type": "text"}
