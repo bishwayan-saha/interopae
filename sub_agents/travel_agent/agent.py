@@ -3,25 +3,42 @@ from google.adk.tools.mcp_tool.mcp_session_manager import StdioServerParameters
 import logging
 from utils.customer_session_manager import CustomMCPToolset as MCPToolset
 from dotenv import load_dotenv
-
+import os
+import json
+from typing import List
 load_dotenv()
 
 logger = logging.getLogger(__name__)
     
-
-def get_airbnb_tools():
-    toolset = MCPToolset(
-        connection_params=StdioServerParameters(
-            command="npx",
-            args=["-y", "@openbnb/mcp-server-airbnb", "--ignore-robots-txt"],
+mcp_config_dir = "/home/bishwayansaha99/poc/interopae/tools"
+def load_travel_agent_tools():
+    with open(f"{mcp_config_dir}/{os.path.basename(os.path.dirname(__file__))}.json") as file:
+        data = json.load(file)
+    mcp_servers = data.get("mcpServers", {})
+    tools: List[MCPToolset] = []
+    for server_name, server_config in mcp_servers.items():
+        print(server_name)
+        toolset = MCPToolset(
+            connection_params=StdioServerParameters(
+                command=server_config.get("command"),
+                args=server_config.get("args"),
+            )
         )
-    )
-    return toolset
+        tools.append(toolset)
+    return tools
 
+# def get_airbnb_tools():
+#     toolset = MCPToolset(
+#         connection_params=StdioServerParameters(
+#             command="npx",
+#             args=["-y", "@openbnb/mcp-server-airbnb", "--ignore-robots-txt"],
+#         )
+#     )
+#     return toolset
 
 
 def create_travel_agent():
-    toolset = get_airbnb_tools()
+    toolset = load_travel_agent_tools()
 
     return Agent(
         name = "travel_agent",
@@ -51,7 +68,7 @@ def create_travel_agent():
         - Ensure responses align with Airbnb’s guidelines and policies.
         - Prevent unnecessary delays in retrieving and processing information.
         """,
-        tools=[toolset]
+        tools=toolset
     )
 
 root_agent = create_travel_agent()
