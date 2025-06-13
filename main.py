@@ -78,7 +78,7 @@ async def sse_connection(user_id: str, is_audio: bool = False):
     )
 
 
-@app.post("/send/{user_id}")
+@app.post("/response/{user_id}")
 async def send_message_non_streaming(user_id: str, request: UserRequest):
     response = await service.send_message_non_streaming(user_id, request)
     return JSONResponse(
@@ -90,7 +90,7 @@ async def send_message_non_streaming(user_id: str, request: UserRequest):
     )
 
 
-@app.post("/send-streaming/{user_id}")
+@app.post("/response-streaming/{user_id}")
 async def send_message_streaming(user_id: str, request: UserRequest):
 
     live_request_queue = active_sessions.get(user_id)
