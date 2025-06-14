@@ -26,7 +26,7 @@ async def lifespan(app: FastAPI):
     server_domain = os.getenv("SERVER_DOMAIN") or "http://localhost"
     credentials = requests.get(f"{server_domain}:5002/credentials").json()
     for creds in credentials["data"]["credentials"]:
-        os.environ[creds] = credentials["data"].get(creds)
+        os.environ[creds] = credentials["data"]["credentials"].get(creds)
     load_dotenv()
     yield
 
