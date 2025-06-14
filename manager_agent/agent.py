@@ -1,6 +1,8 @@
-from google.adk.agents import Agent
-from sub_agents.travel_agent.agent import create_travel_agent
 from dotenv import load_dotenv
+from google.adk.agents import Agent
+
+from sub_agents.travel_agent.agent import create_travel_agent
+
 load_dotenv()
 
 def create_manager_agent():
@@ -36,7 +38,8 @@ def create_manager_agent():
                 - Prevent redundant delegation loops.
                 - Ensure responses uphold factual accuracy and coherence.
             """,
-            sub_agents=[travel_agent] 
+            sub_agents=[travel_agent],
+            output_key="manager_agent"
     )
 
 root_agent = create_manager_agent()

@@ -12,6 +12,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from google.adk.agents import LiveRequestQueue
 from google.genai.types import Blob, Content, Part
 
+from decorator.decorator import token_required
 from models.exception import InteropAEException
 from models.request import UserRequest
 from models.response import ServerResponse, StatusMessage
@@ -20,14 +21,14 @@ from service import service
 logger = logging.getLogger(__name__)
 
 
-# @asynccontextmanager
-# async def lifespan(app: FastAPI):
-#     server_domain = os.getenv("SERVER_DOMAIN") or "http://localhost"
-#     credentials = requests.get(f"{server_domain}:3100/credentials").json()
-#     for creds in credentials["data"]:
-#         os.environ[creds] = credentials["data"].get(creds)
-#     load_dotenv()
-#     yield
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    server_domain = os.getenv("SERVER_DOMAIN") or "http://localhost"
+    credentials = requests.get(f"{server_domain}:5002/credentials").json()
+    for creds in credentials["data"]:
+        os.environ[creds] = credentials["data"].get(creds)
+    load_dotenv()
+    yield
 
 
 app = FastAPI()
@@ -78,9 +79,11 @@ async def sse_connection(user_id: str, is_audio: bool = False):
     )
 
 
-@app.post("/response/{user_id}")
-async def send_message_non_streaming(user_id: str, request: UserRequest):
-    response = await service.send_message_non_streaming(user_id, request)
+@app.post("/response")
+@token_required
+async def send_message_non_streaming(request: Request, user_request: UserRequest):
+    user_id = str(request.state.user.get("id"))
+    response = await service.send_message_non_streaming(user_id, user_request)
     return JSONResponse(
         content=ServerResponse(
             data=response,
