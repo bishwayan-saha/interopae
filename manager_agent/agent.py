@@ -1,12 +1,13 @@
 from dotenv import load_dotenv
 from google.adk.agents import Agent
 
-from sub_agents.travel_agent.agent import create_travel_agent
-
+from sub_agents.hotel_agent.agent import create_hotel_agent
+from sub_agents.transportation_agent.agent import create_transportation_agent
 load_dotenv()
 
 def create_manager_agent():
-    travel_agent = create_travel_agent()
+    hotel_agent = create_hotel_agent()
+    transportation_agent = create_transportation_agent()
     return Agent(
         name="manager_agent",
         model="gemini-2.0-flash-exp",
@@ -37,8 +38,10 @@ def create_manager_agent():
                 - Maintain response efficiency without excessive delays.
                 - Prevent redundant delegation loops.
                 - Ensure responses uphold factual accuracy and coherence.
+                You have access to travel_agent which in turn has access to hotel_agent for searching hotels in a location 
+                and transportation agent which searches for available transportations like railway or flight between localtions.
             """,
-            sub_agents=[travel_agent],
+            sub_agents=[hotel_agent, transportation_agent],
             output_key="manager_agent"
     )
 
