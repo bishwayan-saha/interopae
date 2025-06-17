@@ -2,7 +2,6 @@ import base64
 import json
 import logging
 from typing import AsyncGenerator, Dict
-from uuid import uuid4
 
 from google.adk.agents import LiveRequestQueue
 from google.adk.agents.run_config import RunConfig
@@ -20,10 +19,9 @@ from models.request import UserRequest
 logger = logging.getLogger(__name__)
 
 APP_NAME = "ADK_MCP_APP"
-session_id = uuid4().hex
 
 
-async def start_agent_session(user_id, is_audio=False):
+async def start_agent_session(user_id, is_audio=False, session_id: str = None):
     """Starts an agent session"""
 
     runner = InMemoryRunner(
@@ -115,7 +113,7 @@ async def event_generator(
         cleanup(user_id, active_sessions, live_request_queue)
 
 
-async def send_message_non_streaming(user_id: str, request: UserRequest):
+async def send_message_non_streaming(user_id: str, request: UserRequest, session_id: str):
     runner = Runner(
         app_name=APP_NAME,
         agent=root_agent,
@@ -130,10 +128,14 @@ async def send_message_non_streaming(user_id: str, request: UserRequest):
         session = await runner.session_service.create_session(
             app_name=APP_NAME, user_id=user_id, session_id=session_id, state={}
         )
-    content = Content(role="user", parts=[Part.from_text(text=request.query)])
+    content = Content(role="user", parts=[Part.from_text(text=request.model_dump_json())])
     events = list(
         runner.run(user_id=user_id, session_id=session.id, new_message=content)
     )
+    current_session = await runner.session_service.get_session(app_name=APP_NAME, user_id=user_id, session_id=session_id)
+    stored_output = current_session.state.get(runner.agent.output_key)
     if not events or not events[-1].content or not events[-1].content.parts:
         return {"response": "No response from agent", "type": "text"}
-    return {"response": "\n".join(p.text for p in events[-1].content.parts if p.text), "type": "text"}
+    response = "\n".join(p.text for p in events[-1].content.parts if p.text)
+    type = "html" if all(tag in response for tag in ["<html", "</html>", "<body", "</body>"]) else "markdown"
+    return {"response": response, "type": type, "role": "agent"}

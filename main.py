@@ -3,6 +3,7 @@ import logging
 import os
 from contextlib import asynccontextmanager
 from typing import Dict
+from uuid import uuid4
 
 import requests
 from dotenv import load_dotenv
@@ -33,7 +34,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI()
 active_sessions: Dict[str, LiveRequestQueue] = {}
-
+session_id = uuid4().hex
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -58,7 +59,7 @@ async def sse_connection(user_id: str, is_audio: bool = False):
     """SSE endpoint for agent to client communication"""
     # Start agent session
     live_events, live_request_queue = await service.start_agent_session(
-        user_id, is_audio
+        user_id, is_audio, session_id
     )
 
     active_sessions[user_id] = live_request_queue
@@ -83,7 +84,7 @@ async def sse_connection(user_id: str, is_audio: bool = False):
 @token_required
 async def send_message_non_streaming(request: Request, user_request: UserRequest):
     user_id = str(request.state.user.get("id"))
-    response = await service.send_message_non_streaming(user_id, user_request)
+    response = await service.send_message_non_streaming(user_id, user_request, session_id)
     return JSONResponse(
         content=ServerResponse(
             data=response,
